@@ -1,0 +1,52 @@
+/*
+-- Author     : Amarendra Nagireddy
+-- Date       : 25-01-2016
+-- Description: replicating Folder records from [PS_InfoSnapProd] to [PS_Staging_Amar].Document_LoadInfoSnap
+------------Document Records----------
+total InfoSnap Document Records:48
+*/
+
+DECLARE @strDefaultAuthor NVARCHAR(18) ='user Not Found'-- 
+
+Use PS_Staging_Amar
+SELECT ID			= CAST(SPACE(18) as NVARCHAR(18))
+	  ,ERROR		= CAST(SPACE(255) as NVARCHAR(255))
+	  ,Migrated_Record__c='True'
+	  --transformation rule for the AuthorId field
+	  ,info_AuthorId=d.[AuthorId]
+	  ,PowerUser_id=u.PowerSchoolFullID
+	  ,AuthorId= IIF(u.PowerSchoolFullID IS NULL,
+				          @strDefaultAuthor,  
+				          u.PowerSchoolFullID)
+	  --  TIP: Before a final script, you always want to see where non-matches are occurring, just as a crosscheck.
+	  -- e.g., AuthorID 
+      ,d.[Body]
+      ,d.[BodyLength]
+      ,d.[ContentType]
+      ,d.[CreatedById]
+      ,d.[CreatedDate]
+      ,d.[Description]
+      ,d.[DeveloperName]
+	  ,OldInfosnap_FolderId=d.[FolderId]  --infosnap folder id
+     -- ,FolderId=f.id                    
+      ,ProdId=d.[Id]
+      ,d.[IsBodySearchable]
+      ,d.[IsDeleted]
+      ,d.[IsInternalUseOnly]
+      ,d.[IsPublic]
+      ,d.[Keywords]
+      ,d.[LastModifiedById]
+      ,d.[LastModifiedDate]
+      ,d.[LastReferencedDate]
+      ,d.[LastViewedDate]
+      ,d.[Name]
+      ,d.[NamespacePrefix]
+      ,d.[SystemModstamp]
+      ,d.[Type]
+      ,d.[Url]
+	  --into Document_LoadInfoSnap
+  FROM [PS_InfoSnapProd].[dbo].[Document] d
+  Left Outer Join [PS_Staging_Amar].[dbo].[Folder_LoadInfoSnap] f
+  on d.[FolderId]=f.ProdID
+  Left Outer Join [PS_Staging_Amar].[dbo].[lu_Users] u
+  on d.[AuthorId]=u.InfoSnapID
